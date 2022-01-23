@@ -25,7 +25,9 @@ const JIKE = (documents) => {
 	const keywords = [];
 
 	for (let word in occurrence) {
-		if (occurrence[word].length === documents.length) {
+		const index = occurrence[word].length / documents.length;
+
+		if (index === 1) {
 			keywords.push(word);
 		}
 	}
