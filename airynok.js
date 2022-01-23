@@ -1,93 +1,65 @@
 javascript: (() => {
+	const TFIDFKE = (documents) => {
+		const termFrequency = {};
 
-	var extractKeywords = (text, number) => {
+		for (let i in documents) {
+			const document = documents[i];
 
-		var stopwords = [
-			'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'
-		];
+			const words = document.split(' ');
 
-		var words = text.split(' ');
+			for (let j in words) {
+				const word = words[j];
 
-		var keywords = [];
+				if (termFrequency[word] === undefined) {
+					termFrequency[word] = {
+						total: 1,
+						documents: [i]
+					};
+				} else {
+					termFrequency[word].total++;
 
-		words.forEach(word => {
-
-			word = word.toLowerCase();
-
-			if (/^[a-z0-9]+$/i.test(word) && !stopwords.includes(word)) {
-
-				keywords.push(word);
-			}
-		});
-
-		var keywordFrequency = {};
-
-		keywords.forEach(keyword => {
-
-			if (keywordFrequency[keyword] === undefined) {
-
-				keywordFrequency[keyword] = 1;
-
-			} else {
-
-				keywordFrequency[keyword]++;
-			}
-		});
-
-		var final = [];
-
-		for (var keyword in keywordFrequency) {
-
-			var weight = keywordFrequency[keyword] * Math.log(number / keywordFrequency[keyword]);
-
-			if (weight <= 0) {
-
-				final.push(keyword);
+					if (!termFrequency[word].documents.includes(i)) {
+						termFrequency[word].documents.push(i);
+					}
+				}
 			}
 		}
 
-		return final;
+		const tfIdf = {};
+
+		for (let word in termFrequency) {
+			const tf = termFrequency[word].total;
+			const idf = Math.log(documents.length / termFrequency[word].documents.length);
+
+			tfIdf[word] = tf * idf;
+		}
+
+		const keywords = [];
+
+		for (let word in tfIdf) {
+			if (tfIdf[word] <= 0) {
+				keywords.push(word);
+			}
+		}
+
+		return keywords;
 	};
 
-	var pageTitle = document.title;
-
-	var pageMetaDescription = '';
-
-	var pageMetaOGDescription = '';
-
-	var pageMetaTwitterDescription = '';
+	const documents = [document.title];
 
 	if (document.querySelector('meta[name="description"]')) {
-
-		pageMetaDescription = document
-			.querySelector('meta[name="description"]')
-			.content;
+		documents.push(document.querySelector('meta[name="description"]').content);
 	}
 
 	if (document.querySelector('meta[property="og:description"]')) {
-
-		pageMetaOGDescription = document
-			.querySelector('meta[property="og:description"]')
-			.content;
+		documents.push(document.querySelector('meta[property="og:description"]').content);
 	}
 
 	if (document.querySelector('meta[property="twitter:description"]')) {
-
-		pageMetaTwitterDescription = document
-			.querySelector('meta[property="twitter:description"]')
-			.content;
+		documents.push(pageMetaTwitterDescription = document.querySelector('meta[property="twitter:description"]').content);
 	}
 
-	var productFullInfo = pageTitle + ' '
-		+ pageMetaDescription + ' '
-		+ pageMetaOGDescription + ' '
-		+ pageMetaTwitterDescription;
+	const proxyURL = 'https://airynok.github.io/?q=' + TFIDFKE(documents).join('+');
 
-	var keywords = extractKeywords(productFullInfo, 2);
-
-	var searchQuery = keywords.join('+');
-
-	var proxyString = 'https://airynok.github.io/?q=' + searchQuery;
-
-	window.open(encodeURI(proxyString), '_blank');
+	window.open(encodeURI(proxyURL), '_blank');
 })();
