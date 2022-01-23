@@ -1,5 +1,5 @@
 javascript: (() => {
-	const TFIDFKE = (documents) => {
+	const RTFIDFKE = (documents) => {
 		const termFrequency = {};
 
 		for (let i in documents) {
@@ -37,7 +37,7 @@ javascript: (() => {
 		const keywords = [];
 
 		for (let word in tfIdf) {
-			if (tfIdf[word] <= 0) {
+			if (tfIdf[word] === 0) {
 				keywords.push(word);
 			}
 		}
@@ -59,7 +59,7 @@ javascript: (() => {
 		documents.push(pageMetaTwitterDescription = document.querySelector('meta[property="twitter:description"]').content);
 	}
 
-	const proxyURL = 'https://airynok.github.io/?q=' + TFIDFKE(documents).join('+');
+	const proxyURL = 'https://airynok.github.io/?q=' + RTFIDFKE(documents).join('+');
 
 	window.open(encodeURI(proxyURL), '_blank');
 })();
