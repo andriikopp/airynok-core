@@ -1,43 +1,57 @@
 javascript: (() => {
-	const RTFIDFKE = (documents) => {
-		const termFrequency = {};
+	const AIRKE = (documents) => {
+		const words = [];
+
+		for (let i in documents) {
+			documents[i] = documents[i]
+				.replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
+				.replace(/\s+/g, ' ')
+				.toLowerCase()
+				.split(' ');
+		}
 
 		for (let i in documents) {
 			const document = documents[i];
 
-			const words = document.split(' ');
+			for (let j in document) {
+				const word = document[j];
 
-			for (let j in words) {
-				const word = words[j];
-
-				if (termFrequency[word] === undefined) {
-					termFrequency[word] = {
-						total: 1,
-						documents: [i]
-					};
-				} else {
-					termFrequency[word].total++;
-
-					if (!termFrequency[word].documents.includes(i)) {
-						termFrequency[word].documents.push(i);
-					}
+				if (!words.includes(word)) {
+					words.push(word);
 				}
 			}
 		}
 
-		const tfIdf = {};
+		const vectors = {};
 
-		for (let word in termFrequency) {
-			const tf = termFrequency[word].total;
-			const idf = Math.log(documents.length / termFrequency[word].documents.length);
+		for (let i in words) {
+			const word = words[i];
 
-			tfIdf[word] = tf * idf;
+			vectors[word] = new Array(documents.length);
+
+			for (let j in documents) {
+				const document = documents[j];
+
+				if (document.includes(word)) {
+					vectors[word][j] = 1;
+				} else {
+					vectors[word][j] = 0;
+				}
+			}
 		}
 
 		const keywords = [];
 
-		for (let word in tfIdf) {
-			if (tfIdf[word] === 0) {
+		const DF = (vector) => {
+			const sum = vector.reduce((a, b) => a + b, 0);
+
+			return Math.log(sum / vector.length);
+		};
+
+		for (let word in vectors) {
+			const vector = vectors[word];
+
+			if (DF(vector) === 0) {
 				keywords.push(word);
 			}
 		}
@@ -47,19 +61,23 @@ javascript: (() => {
 
 	const documents = [document.title];
 
-	if (document.querySelector('meta[name="description"]')) {
-		documents.push(document.querySelector('meta[name="description"]').content);
+	const descriptionTag = document.querySelector('meta[name="description"]');
+	const ogDescriptionTag = document.querySelector('meta[name="og:description"]');
+	const twitterDescriptionTag = document.querySelector('meta[name="twitter:description"]');
+
+	if (descriptionTag) {
+		documents.push(descriptionTag.content);
 	}
 
-	if (document.querySelector('meta[property="og:description"]')) {
-		documents.push(document.querySelector('meta[property="og:description"]').content);
+	if (ogDescriptionTag) {
+		documents.push(ogDescriptionTag.content);
 	}
 
-	if (document.querySelector('meta[property="twitter:description"]')) {
-		documents.push(pageMetaTwitterDescription = document.querySelector('meta[property="twitter:description"]').content);
+	if (twitterDescriptionTag) {
+		documents.push(twitterDescriptionTag.content);
 	}
 
-	const proxyURL = 'https://airynok.github.io/?q=' + RTFIDFKE(documents).join('+');
+	const proxyURL = 'https://airynok.github.io/?q=' + AIRKE(documents).join('+');
 
 	window.open(encodeURI(proxyURL), '_blank');
 })();
