@@ -62,8 +62,8 @@ javascript: (() => {
 	const documents = [document.title];
 
 	const descriptionTag = document.querySelector('meta[name="description"]');
-	const ogDescriptionTag = document.querySelector('meta[name="og:description"]');
-	const twitterDescriptionTag = document.querySelector('meta[name="twitter:description"]');
+	const ogDescriptionTag = document.querySelector('meta[property="og:description"]');
+	const twitterDescriptionTag = document.querySelector('meta[property="twitter:description"]');
 
 	if (descriptionTag) {
 		documents.push(descriptionTag.content);
@@ -75,6 +75,22 @@ javascript: (() => {
 
 	if (twitterDescriptionTag) {
 		documents.push(twitterDescriptionTag.content);
+	}
+
+	const keywordsTag = document.querySelector('meta[name="keywords"]');
+
+	if (keywordsTag) {
+		documents.push(keywordsTag.content);
+	}
+
+	const h1Tags = document.querySelectorAll('h1');
+
+	for (let tag in h1Tags) {
+		const header = h1Tags[tag].innerText;
+
+		if (header !== undefined && header) {
+			documents.push(header);
+		}
 	}
 
 	const proxyURL = 'https://airynok.github.io/?q=' + AIRKE(documents).join('+');
