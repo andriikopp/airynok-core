@@ -51,10 +51,20 @@ const AIRKE = (documents) => {
 		return Math.log(sum / vector.length);
 	};
 
+	const weights = [];
+
 	for (let word in vectors) {
 		const vector = vectors[word];
 
-		if (DF(vector) === 0) {
+		weights.push(DF(vector));
+	}
+
+	const opt = Math.max(...weights);
+
+	for (let word in vectors) {
+		const vector = vectors[word];
+
+		if (DF(vector) === opt) {
 			keywords.push(word);
 		}
 	}
@@ -66,4 +76,4 @@ const title = 'Фитнес браслет Xiaomi Mi Smart Band 6 Black EU ку�
 
 const description = 'Купить Фитнес браслет Xiaomi Mi Smart Band 6 Black EU ☑ Цена 1069 грн. ☑ ELMIR.UA ☑ Доставка 1-2 дня. ⏩ Рассрочка 0%*. ⏩ Описание, характеристики, отзывы и фото.';
 
-console.log(AIRKE([title, description]));
+console.log(AIRKE([title, description, '']));

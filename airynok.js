@@ -48,10 +48,20 @@ javascript: (() => {
 			return Math.log(sum / vector.length);
 		};
 
+		const weights = [];
+
 		for (let word in vectors) {
 			const vector = vectors[word];
 
-			if (DF(vector) === 0) {
+			weights.push(DF(vector));
+		}
+
+		const opt = Math.max(...weights);
+
+		for (let word in vectors) {
+			const vector = vectors[word];
+
+			if (DF(vector) === opt) {
 				keywords.push(word);
 			}
 		}
