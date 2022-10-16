@@ -1,109 +1,141 @@
 javascript: (() => {
-	const AIRKE = (documents) => {
-		const words = [];
+    /**
+     * The custom algorithm for keywords extraction from a product's web page.
+     * 
+     * @param {*} documents - the list of documents taken from the product's web page;
+     * @returns the list of keywords extracted from the product's web page.
+     */
+    const AIRKE = (documents) => {
+        const words = []; /* The bag of unique words that describes the web page. */
 
-		for (let i in documents) {
-			documents[i] = documents[i]
-				.replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
-				.replace(/\s+/g, ' ')
-				.toLowerCase()
-				.split(' ');
-		}
+        /* Process each document. */
+        for (let i in documents) {
+            documents[i] = documents[i]
+                .replace(/[~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '') /* Remove non-alphabetic characters. */
+                .replace(/\s+/g, ' ') /* Remove multiple spaces. */
+                .toLowerCase() /* Turn into lower case. */
+                .split(' '); /* Tokenize. */
+        }
 
-		for (let i in documents) {
-			const document = documents[i];
+        for (let i in documents) {
+            const document = documents[i];
 
-			for (let j in document) {
-				const word = document[j];
+            for (let j in document) {
+                const word = document[j];
 
-				if (!words.includes(word)) {
-					words.push(word);
-				}
-			}
-		}
+                /* Check if the word has not been taken yet. */
+                if (!words.includes(word)) {
+                    words.push(word); /* Add the word to the bag of words. */
+                }
+            }
+        }
 
-		const vectors = {};
+        console.log('BOW:', words);
 
-		for (let i in words) {
-			const word = words[i];
+        const vectors = {}; /* Binary vectors built for each word. */
 
-			vectors[word] = new Array(documents.length);
+        for (let i in words) {
+            const word = words[i];
 
-			for (let j in documents) {
-				const document = documents[j];
+            vectors[word] = new Array(documents.length);
 
-				if (document.includes(word)) {
-					vectors[word][j] = 1;
-				} else {
-					vectors[word][j] = 0;
-				}
-			}
-		}
+            for (let j in documents) {
+                const document = documents[j];
 
-		const keywords = [];
+                /* Check if the j-th document includes the word. */
+                if (document.includes(word)) {
+                    vectors[word][j] = 1; /* Vector for this word has 1 at the j-th position. */
+                } else {
+                    vectors[word][j] = 0; /* Otherwise this word has 0 at the j-th position. */
+                }
+            }
+        }
 
-		const DF = (vector) => {
-			const sum = vector.reduce((a, b) => a + b, 0);
+        console.log('Vectors:', vectors);
 
-			return Math.log(sum / vector.length);
-		};
+        const keywords = []; /* The list of extracted keywords. */
 
-		const weights = [];
+        /**
+         * Calculates the document's frequency for a given binary vector that describes presence of a word in processed documents.
+         * 
+         * @param {*} vector - the binary vector that describes presence of a word in processed documents;
+         * @returns the document's frequency value.
+         */
+        const DF = (vector) => {
+            const sum = vector.reduce((a, b) => a + b, 0);
 
-		for (let word in vectors) {
-			const vector = vectors[word];
+            return Math.log(sum / vector.length);
+        };
 
-			weights.push(DF(vector));
-		}
+        const documentFrequencies = []; /* The list of document frequency values calculated for all word vectors. */
 
-		const opt = Math.max(...weights);
+        for (let word in vectors) {
+            const vector = vectors[word];
 
-		for (let word in vectors) {
-			const vector = vectors[word];
+            documentFrequencies.push(DF(vector)); /* Calculate the document's frequency for each word's vector. */
+        }
 
-			if (DF(vector) === opt) {
-				keywords.push(word);
-			}
-		}
+        const opt = Math.max(...documentFrequencies); /* Get the maximum document's frequency. */
 
-		return keywords;
-	};
+        for (let word in vectors) {
+            const vector = vectors[word];
 
-	const documents = [document.title];
+            /* Check if the document's frequency of a word's vector is maximum. */
+            if (DF(vector) === opt) {
+                keywords.push(word); /* Add the respective word to the list of keywords. */
+            }
+        }
 
-	const descriptionTag = document.querySelector('meta[name="description"]');
-	const ogDescriptionTag = document.querySelector('meta[property="og:description"]');
-	const twitterDescriptionTag = document.querySelector('meta[property="twitter:description"]');
+        console.log('Keywords:', vectors);
 
-	if (descriptionTag) {
-		documents.push(descriptionTag.content);
-	}
+        return keywords;
+    };
 
-	if (ogDescriptionTag) {
-		documents.push(ogDescriptionTag.content);
-	}
+    /* Add a web page's title to the list of documents. */
+    const documents = [document.title];
 
-	if (twitterDescriptionTag) {
-		documents.push(twitterDescriptionTag.content);
-	}
+    /* Get the meta description value(s) from the web page. */
+    const descriptionTag = document.querySelector('meta[name="description"]');
+    const ogDescriptionTag = document.querySelector('meta[property="og:description"]');
+    const twitterDescriptionTag = document.querySelector('meta[property="twitter:description"]');
 
-	const keywordsTag = document.querySelector('meta[name="keywords"]');
+    /* Check if the "description" tag exists and has a value. */
+    if (descriptionTag) {
+        documents.push(descriptionTag.content); /* Add the taken tag's value to the list of documents. */
+    }
 
-	if (keywordsTag) {
-		documents.push(keywordsTag.content);
-	}
+    /* Check if the "og:description" tag exists and has a value. */
+    if (ogDescriptionTag) {
+        documents.push(ogDescriptionTag.content); /* Add the taken tag's value to the list of documents. */
+    }
 
-	const h1Tags = document.querySelectorAll('h1');
+    /* Check if the "twitter:description" tag exists and has a value. */
+    if (twitterDescriptionTag) {
+        documents.push(twitterDescriptionTag.content); /* Add the taken tag's value to the list of documents. */
+    }
 
-	for (let tag in h1Tags) {
-		const header = h1Tags[tag].innerText;
+    /* Get the keywords from the web page. */
+    const keywordsTag = document.querySelector('meta[name="keywords"]');
 
-		if (header !== undefined && header) {
-			documents.push(header);
-		}
-	}
+    /* Check if the "keywords" tag exists and has a value. */
+    if (keywordsTag) {
+        documents.push(keywordsTag.content); /* Add the taken tag's value to the list of documents. */
+    }
 
-	const proxyURL = 'https://airynok.github.io/?q=' + AIRKE(documents).join('+');
+    /* Get the H1 tag values from the web page. */
+    const h1Tags = document.querySelectorAll('h1');
 
-	window.open(encodeURI(proxyURL), '_blank');
+    for (let tag in h1Tags) {
+        const header = h1Tags[tag].innerText;
+
+        /* Check if the obtained "h1" tag exists and has a value. */
+        if (header !== undefined && header) {
+            documents.push(header); /* Add the taken tag's value to the list of documents. */
+        }
+    }
+
+    /* Build the URL that points to the homepage with the created search request. */
+    const proxyURL = 'https://airynok.github.io/?q=' + AIRKE(documents).join('+');
+
+    window.open(encodeURI(proxyURL), '_blank'); /* Open the homepage with the prepared search request. */
 })();
